@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  </head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a id="brand" class="navbar-brand" href="#">Testy</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul id="navbar" class="navbar-nav mr-auto">
+      </ul>
+    </div>
+  </nav>
+  <div id="content" class="container-fluid"></div>
+  <pre>
+    <p id="demo"></p>
+  </pre>
+<script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script>
+ jQuery.getJSON ("config.json", function (jd){
+    aConfig = jd;
+    document.getElementById("brand").innerHTML = aConfig.name;
+
+    function getNavbar (id, config)
+    {
+      var output = ""; 
+      for (var i=0; i< config.length; i++)
+      {
+        if (config[i].type === "folder")
+        {
+          output += '<li class="nav-item"><a class="nav-link" href="#'+config[i].ui_name+'">'+config[i].ui_name+'</a></li>';
+        }
+      }
+      document.getElementById(id).innerHTML = output;
+    }
+
+    function getContent (id, config)
+    {
+      var output = "";
+      var converter = new showdown.Converter();
+
+      var printStuff = function (config){
+        for (var i=0; i < config.length; i++)
+        {
+          var aCfg = config[i];
+          if (aCfg.type === "folder")
+          {
+            output += '<h1 id="'+aCfg.ui_name+'">'+aCfg.ui_name+'</h1>';
+            output += "</br>";
+            if (aCfg.content)
+            {
+              printStuff (aCfg.content);
+            }
+          }
+          else if (aCfg.type === "file")
+          {
+            if (aCfg.ext && aCfg.ext === "md")
+            {
+              output += marked(aCfg.md);
+            }
+            else if (aCfg.ext && (aCfg.ext === "jpg" || aCfg.ext === "gif"  || aCfg.ext === "png"))
+            {
+              output += "<img src='" + aCfg.path + "' class='img-fluid' />";
+            }
+            output += "</br>";
+          }
+          output += "</br>";
+        }
+        return output;
+      };
+      output = printStuff (config);
+      output += "</br><a href='#brand'>To the Top</a></br>";
+      
+      document.getElementById(id).innerHTML = output;
+    }
+
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        myObj = JSON.parse(this.responseText);
+        document.getElementById("demo").innerHTML = JSON.stringify(myObj, null, 2);
+
+        getNavbar ("navbar", myObj);
+
+        getContent ("content", myObj);
+      }
+    };
+    xmlhttp.open("GET", "api.php", true);
+    xmlhttp.send();
+  });
+  
+</script>
+  </body>
+</html>
